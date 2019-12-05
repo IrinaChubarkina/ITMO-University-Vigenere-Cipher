@@ -38,22 +38,37 @@ FILE *openFileOrThrow(const char *fileName, const char *mode) {
     }
 }
 
+int getFileSize(FILE *file, const char *fileName){
+  if (fseek(file, 0, SEEK_END) == -1) {
+      fprintf(stderr, "failed to fseek %s\n", fileName);
+      exit(EXIT_FAILURE);
+  }
+
+  fseek(file, 0, SEEK_END);
+  int size = ftell(file);
+  rewind(file);
+
+  return size;
+}
+
 void writeWordToResultFile(FILE *wordFile, const char *wordFileName, FILE *resultFile) {
-    //int wordSize = getFileSize(wordFile, wordFileName);
-    //char *str = (char*)malloc(wordSize + 1);
+    
+    int wordSize = getFileSize(wordFile, wordFileName);
+    char *str = (char*)malloc(wordSize + 1);
 
-    //if (wordSize == 0)
-    //{/
+    if (wordSize == 0)
+    {
         return;
-    //}  
+    }  
 
-    //wordFile = fopen(wordFileName, "r");
-    //fread(str, sizeof(char), wordSize, wordFile);
-    //str[wordSize] = 0;
+    // wordFile = fopen(wordFileName, "r");
+    fread(str, sizeof(char), wordSize, wordFile);
+    str[wordSize] = 0;
 
-    //fputs(str, resultFile);
-    //wordFile = fopen(wordFileName, "w");
-    //free(str);
+    fputs(str, resultFile);
+    // wordFile = fopen(wordFileName, "w");
+    fseek(wordFile, 0, SEEK_SET);
+    free(str);
 } 
 
 int main (int argc, char *argv[])
@@ -93,7 +108,7 @@ int main (int argc, char *argv[])
     fprintf(stderr, "You should set one of -c/-d options\n%s", OFFER_HELP); 
     exit(EXIT_FAILURE);
   }
-  printf("%d %d\n", code, decode);
+
   if( !kSet ) { 
     fprintf(stderr, "-k is required option\n%s", OFFER_HELP); 
     exit(EXIT_FAILURE);
@@ -104,19 +119,19 @@ int main (int argc, char *argv[])
 
 
   switch(argc){
-      case 3:
+      case 4:
         source = stdin;
         destination = stdout;
 
         break;
 
-      case 4:
+      case 5:
         source = openFileOrThrow(argv[4], "r");
         destination = stdout;
 
         break;
 
-      case 5:
+      case 6:
         source = openFileOrThrow(argv[4], "r");
         source = openFileOrThrow(argv[5], "w");
         
@@ -128,68 +143,73 @@ int main (int argc, char *argv[])
     }
 
     FILE *fileForOneWord;
-    fileForOneWord = openFileOrThrow(ONE_WORD_FILE_NAME, "w");
+    fileForOneWord = tmpfile();
 
-    FILE *result;
-    result = openFileOrThrow("result.txt", "w");
+    // FILE *res = openFileOrThrow("res.txt", "w");
+
+    if (fileForOneWord == NULL)
+    {
+      fprintf(stderr, "Cannot create temp file\n%s", OFFER_HELP); 
+      exit(EXIT_FAILURE);
+    }
 
     char ch;
 
-    for (size_t i = 0; i < sourceSize; i++)
-    {
+    while(!feof(source)){
+    
         ch=fgetc(source);
 
         if(isalpha(ch) ) {
             fputc(tolower(ch), fileForOneWord);
         } 
         else {
-            writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
-            fputc(ch, result);     
+            writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, destination);
+            fputc(ch, destination);     
         }
     }
-    writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
+   //  writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
 
-    fclose(result);
-    result = openFileOrThrow("result.txt", "r");
+   //  fclose(result);
+   //  result = openFileOrThrow("result.txt", "r");
 
-    printf("result:\n");
+   //  printf("result:\n");
 
-    for (size_t i = 0; i < resultFileSize; i++)
-    {
-        ch=fgetc(result);
-        fputc(ch, stdout);
-    }
+   //  for (size_t i = 0; i < resultFileSize; i++)
+   //  {
+   //      ch=fgetc(result);
+   //      fputc(ch, stdout);
+   //  }
 
-    fclose(fileForOneWord);
-    fclose(source);
-    fclose(result);
+   //  fclose(fileForOneWord);
+   //  fclose(source);
+   //  fclose(result);
 
     
-    FILE *fileForOneWord;
-    fileForOneWord = openFileOrThrow(ONE_WORD_FILE_NAME, "w");
+   //  FILE *fileForOneWord;
+   //  fileForOneWord = openFileOrThrow(ONE_WORD_FILE_NAME, "w");
 
-    FILE *result;
-    result = openFileOrThrow("result.txt", "w");
+   //  FILE *result;
+   //  result = openFileOrThrow("result.txt", "w");
 
-    int ch;
-       while((ch=getc(stdin)) != EOF) {
-            if(isalpha(ch) ) {
-                fputc(tolower(ch), fileForOneWord);
-            } 
-            else {
-                writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
-                fputc(ch, result);     
-            }
-        }
-        writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
+   //  int ch;
+   //     while((ch=getc(stdin)) != EOF) {
+   //          if(isalpha(ch) ) {
+   //              fputc(tolower(ch), fileForOneWord);
+   //          } 
+   //          else {
+   //              writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
+   //              fputc(ch, result);     
+   //          }
+   //      }
+   //      writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
 
-        result = openFileOrThrow("result.txt", "r");
+   //      result = openFileOrThrow("result.txt", "r");
 
-    fclose(fileForOneWord);
-    fclose(result);
+   //  fclose(fileForOneWord);
+   //  fclose(result);
 
-   return 0;
-
+   // return 0;
+// printf("SF");
   
     return 0;
 }
