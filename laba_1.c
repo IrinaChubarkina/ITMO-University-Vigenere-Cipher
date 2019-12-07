@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include <string.h>
 
 #define OFFER_HELP "See -h for more information\n"
 #define ONE_WORD_FILE_NAME "fileForOneWord.txt"
@@ -77,6 +78,10 @@ int main (int argc, char *argv[])
         fprintf(stderr, "Missing required options\n%s", OFFER_HELP); 
         exit(EXIT_FAILURE);
     }
+  if(argc > 6) { 
+        fprintf(stderr, "Too many arguments!\n%s", OFFER_HELP); 
+        exit(EXIT_FAILURE);
+    }
   char *opts = "hk:cd";
   int opt;
   bool code, decode, kSet;
@@ -102,6 +107,9 @@ int main (int argc, char *argv[])
       case 'd':
         decode = true;
         break;
+
+        // default:
+        // break;
     }
   }
   if( !(code ^ decode) ) { 
@@ -119,6 +127,7 @@ int main (int argc, char *argv[])
 
 
   switch(argc){
+
       case 4:
         source = stdin;
         destination = stdout;
@@ -137,79 +146,33 @@ int main (int argc, char *argv[])
         
         break;
 
-      default:
-        fprintf(stderr, "Too many arguments!\n%s", OFFER_HELP); 
-        exit(EXIT_FAILURE);
+        default:
+          break;
     }
-
-    FILE *fileForOneWord;
-    fileForOneWord = tmpfile();
-
-    // FILE *res = openFileOrThrow("res.txt", "w");
-
-    if (fileForOneWord == NULL)
-    {
-      fprintf(stderr, "Cannot create temp file\n%s", OFFER_HELP); 
-      exit(EXIT_FAILURE);
-    }
-
+    
+    char *str = (char*)malloc(sizeof(char));
+    int n = 0;
     char ch;
 
-    while(!feof(source)){
-    
-        ch=fgetc(source);
+    while (1) 
+    {
+        ch = fgetc(source);
 
-        if(isalpha(ch) ) {
-            fputc(tolower(ch), fileForOneWord);
-        } 
-        else {
-            writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, destination);
-            fputc(ch, destination);     
+        if (ch == EOF)
+        {
+          break;
         }
-    }
-   //  writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
 
-   //  fclose(result);
-   //  result = openFileOrThrow("result.txt", "r");
+        str[n] = ch;
+        n++;
+        str = (char*)realloc(str, sizeof(char)*(n + 1));
+    } 
+    str[n+1] = 0;
 
-   //  printf("result:\n");
+    printf("string - %s\n", str);
 
-   //  for (size_t i = 0; i < resultFileSize; i++)
-   //  {
-   //      ch=fgetc(result);
-   //      fputc(ch, stdout);
-   //  }
-
-   //  fclose(fileForOneWord);
-   //  fclose(source);
-   //  fclose(result);
-
-    
-   //  FILE *fileForOneWord;
-   //  fileForOneWord = openFileOrThrow(ONE_WORD_FILE_NAME, "w");
-
-   //  FILE *result;
-   //  result = openFileOrThrow("result.txt", "w");
-
-   //  int ch;
-   //     while((ch=getc(stdin)) != EOF) {
-   //          if(isalpha(ch) ) {
-   //              fputc(tolower(ch), fileForOneWord);
-   //          } 
-   //          else {
-   //              writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
-   //              fputc(ch, result);     
-   //          }
-   //      }
-   //      writeWordToResultFile(fileForOneWord, ONE_WORD_FILE_NAME, result);
-
-   //      result = openFileOrThrow("result.txt", "r");
-
-   //  fclose(fileForOneWord);
-   //  fclose(result);
-
-   // return 0;
-// printf("SF");
+fclose(source);
+fclose(destination);
   
     return 0;
 }
