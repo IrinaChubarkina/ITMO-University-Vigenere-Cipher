@@ -84,7 +84,7 @@ void code_text(const char* source, const char* key, FILE *destination) {
       char encoded = vigenereTable[symbolIndex][keyIndex];
       fputc(encoded, destination);
     
-      keyPosition = (keyPosition < keyLenght -1) 
+      keyPosition = keyPosition < keyLenght -1
                     ? keyPosition + 1
                     : 0; 
     }
@@ -113,7 +113,7 @@ void decode_text(const char* source, const char* key, FILE *destination) {
       char decoded = vigenereTable[0][columnNumber];
       fputc(decoded, destination);
   
-      keyPosition = (keyPosition < keyLenght -1) 
+      keyPosition = keyPosition < keyLenght -1
                     ? keyPosition + 1
                     : 0; 
     }
