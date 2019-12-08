@@ -22,7 +22,7 @@ void help(const char fileName[]) {
     printf("\nATTENTION!\nKey and operation type(code or decode) are required options\n");
   }
 
-bool isValid( const char key[] )
+bool is_valid( const char key[] )
 {
     char c;
 
@@ -32,7 +32,7 @@ bool isValid( const char key[] )
     return *key == '\0'; 
 }
 
-FILE *openFileOrThrow(const char *fileName, const char *mode) {
+FILE *open_file_or_throw(const char *fileName, const char *mode) {
     FILE *file;
     file = fopen(fileName, mode);
     if ( file == NULL) {
@@ -42,7 +42,7 @@ FILE *openFileOrThrow(const char *fileName, const char *mode) {
     return file;
 } 
 
-void fillVigenerTable(char vigenereTable[26][26]) {
+void fill_vigener_table(char vigenereTable[26][26]) {
   
   char alphabet[26];
 
@@ -67,7 +67,7 @@ void fillVigenerTable(char vigenereTable[26][26]) {
   }
 }
 
-void codeText(const char* source, const char* key, FILE *destination) {
+void code_text(const char* source, const char* key, FILE *destination) {
 
   int symbolCount = strlen(source);
   int keyPosition = 0;
@@ -94,7 +94,7 @@ void codeText(const char* source, const char* key, FILE *destination) {
   } 
 }
 
-void decodeText(const char* source, const char* key, FILE *destination) {
+void decode_text(const char* source, const char* key, FILE *destination) {
 
   int symbolCount = strlen(source);
   int keyPosition = 0;
@@ -147,7 +147,7 @@ int main (int argc, char *argv[])
         exit(EXIT_SUCCESS);
 
       case 'k':
-        if  (!isValid(optarg)) {
+        if  (!is_valid(optarg)) {
             fprintf(stderr, "\"%s\" - invalid KEY!\n%s", optarg, OFFER_HELP); 
             exit(EXIT_FAILURE);
         }
@@ -187,14 +187,14 @@ int main (int argc, char *argv[])
         break;
 
       case 5:
-        source = openFileOrThrow(argv[4], "r");
+        source = open_file_or_throw(argv[4], "r");
         destination = stdout;
 
         break;
 
       case 6:
-        source = openFileOrThrow(argv[4], "r");
-        destination = openFileOrThrow(argv[5], "w");
+        source = open_file_or_throw(argv[4], "r");
+        destination = open_file_or_throw(argv[5], "w");
         
         break;
 
@@ -223,7 +223,7 @@ int main (int argc, char *argv[])
   textToEncrypt[symbolCount + 1] = 0;
   fclose(source);
 
-  fillVigenerTable(vigenereTable);  
+  fill_vigener_table(vigenereTable);  
   keyLenght = strlen(key);  
 
   for (int i = 0; i < keyLenght; ++i)
@@ -231,11 +231,15 @@ int main (int argc, char *argv[])
     key[i] = toupper(key[i]);
   }
 
+  if (destination == stdout)
+  {
+    printf("\nResult:\n");
+  }
   if (code){
-    codeText(textToEncrypt, key, destination);
+    code_text(textToEncrypt, key, destination);
   } 
   else { 
-    decodeText(textToEncrypt, key, destination);
+    decode_text(textToEncrypt, key, destination);
   }
   
   fputc('\n', destination);
