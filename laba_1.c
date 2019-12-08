@@ -7,6 +7,9 @@
 
 #define OFFER_HELP "See -h for more information\n"
 
+char vigenereTable[26][26];
+int keyLenght;
+
 void help(const char fileName[]) {
     printf("\nUsage:\n");
     printf("\n%s [options] [source file [destination file]]\n", fileName);
@@ -64,12 +67,68 @@ void fillVigenerTable(char vigenereTable[26][26]) {
   }
 }
 
+void codeText(const char* source, const char* key, FILE *destination) {
+
+  int symbolCount = strlen(source);
+  int keyPosition = 0;
+
+  for (int i = 0; i <= symbolCount; ++i)
+  {
+    if (isalpha(source[i]))
+    {
+      char symbol = toupper(source[i]); 
+
+      int symbolIndex = symbol - 65;
+      int keyIndex = key[keyPosition] - 65;
+
+      char encoded = vigenereTable[symbolIndex][keyIndex];
+      fputc(encoded, destination);
+    
+      keyPosition = (keyPosition < keyLenght -1) 
+                    ? keyPosition + 1
+                    : 0; 
+    }
+    else {
+      fputc(source[i], destination);
+    }
+  } 
+}
+
+void decodeText(const char* source, const char* key, FILE *destination) {
+
+  int symbolCount = strlen(source);
+  int keyPosition = 0;
+
+  for (int i = 0; i <= symbolCount; ++i)
+  {
+    if (isalpha(source[i]))
+    {
+      char symbol = toupper(source[i]); 
+      int keyIndex = key[keyPosition] - 65;
+
+      int columnNumber = 0;
+      while(vigenereTable[keyIndex][columnNumber] != symbol){
+          columnNumber++;
+      }
+      char decoded = vigenereTable[0][columnNumber];
+      fputc(decoded, destination);
+  
+      keyPosition = (keyPosition < keyLenght -1) 
+                    ? keyPosition + 1
+                    : 0; 
+    }
+    else {
+      fputc(source[i], destination);
+    }
+  } 
+}
+
 int main (int argc, char *argv[])
 {
   if(argc == 1) { 
         fprintf(stderr, "Missing required options\n%s", OFFER_HELP); 
         exit(EXIT_FAILURE);
-    }
+  }
 
   char *opts = "hk:cd";
   int opt;
@@ -115,6 +174,7 @@ int main (int argc, char *argv[])
     fprintf(stderr, "-k is required option\n%s", OFFER_HELP); 
     exit(EXIT_FAILURE);
   }
+
   FILE *source;
   FILE *destination;
 
@@ -134,112 +194,53 @@ int main (int argc, char *argv[])
 
       case 6:
         source = openFileOrThrow(argv[4], "r");
-        destination = openFileOrThrow(argv[5], "wb");
+        destination = openFileOrThrow(argv[5], "w");
         
         break;
 
       default:
         fprintf(stderr, "Too many arguments!\n%s", OFFER_HELP); 
         exit(EXIT_FAILURE);
-    }
+  }
     
-    char *tempString = (char*)malloc(sizeof(char));
-    int symbolCount = 0;
-    char symbol;
+  char *textToEncrypt = (char*)malloc(sizeof(char));
+  int symbolCount = 0;
+  char symbol;
 
-    while (1) 
-    {
-        symbol = fgetc(source);
+  while (1) 
+  {
+      symbol = fgetc(source);
 
-        if (symbol == EOF)
-        {
-          break;
-        }
+      if (symbol == EOF)
+      {
+        break;
+      }
 
-        tempString[symbolCount] = symbol;
-        symbolCount++;
-        tempString = (char*)realloc(tempString, sizeof(char)*(symbolCount + 1));
-    } 
-    tempString[symbolCount+1] = 0;
+      textToEncrypt[symbolCount] = symbol;
+      symbolCount++;
+      textToEncrypt = (char*)realloc(textToEncrypt, sizeof(char)*(symbolCount + 1));
+  } 
+  textToEncrypt[symbolCount + 1] = 0;
+  fclose(source);
 
-  char vigenereTable[26][26];
-  fillVigenerTable(vigenereTable);
-  
-  int keyLenght = strlen(key);  
+  fillVigenerTable(vigenereTable);  
+  keyLenght = strlen(key);  
+
   for (int i = 0; i < keyLenght; ++i)
   {
     key[i] = toupper(key[i]);
   }
-  printf("%s\n", key);
 
-  int keyPosition = 0;
-
-  for (int i = 0; i <= symbolCount; ++i)
-  {
-    if (isalpha(tempString[i]))
-    {
-      char symbol = toupper(tempString[i]); 
-
-      int symbolIndex = symbol - 65;
-      int keyIndex = key[keyPosition] - 65;
-
-      char encoded = vigenereTable[symbolIndex][keyIndex];
-
-      char c = fputc(encoded, destination);
-      if (c == EOF) {
-          fprintf(stderr, "Cannot write symbol to destination file\n"); 
-          exit(EXIT_FAILURE);
-      }
-      keyPosition = (keyPosition < keyLenght -1) 
-              ? keyPosition +1
-              : 0; 
-    }
-    else {
-
-      char c = fputc(tempString[i], destination);
-      if (c == EOF) {
-          fprintf(stderr, "Cannot write symbol to destination file\n"); 
-          exit(EXIT_FAILURE);
-        }
-    }
+  if (code){
+    codeText(textToEncrypt, key, destination);
   } 
-
-  // for (int i = 0; i <= symbolCount; ++i)
-  // {
-  //   if (isalpha(tempString[i]))
-  //   {
-  //     char symbol = toupper(tempString[i]); 
-
-  //     int keyIndex = key[keyPosition] - 65;
-
-  //     int k = 0;
-  //     while(vigenereTable[keyIndex][k] != symbol){
-  //         k++;
-  //     }
-  //     char iNeed = vigenereTable[0][k];
-
-  //     char c = fputc(iNeed, destination);
-  //     if (c == EOF) {
-  //         fprintf(stderr, "Cannot write symbol to destination file\n"); 
-  //         exit(EXIT_FAILURE);
-  //     }
-  //     keyPosition = (keyPosition < keyLenght -1) 
-  //             ? keyPosition +1
-  //             : 0; 
-  //   }
-  //   else {
-
-  //     char c = fputc(tempString[i], destination);
-  //     if (c == EOF) {
-  //         fprintf(stderr, "Cannot write symbol to destination file\n"); 
-  //         exit(EXIT_FAILURE);
-  //       }
-  //   }
-  // } 
+  else { 
+    decodeText(textToEncrypt, key, destination);
+  }
+  
   fputc('\n', destination);
 
-  free(tempString);
-  fclose(source);
+  free(textToEncrypt);
   fclose(destination);
     
   return 0;
