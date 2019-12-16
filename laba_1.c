@@ -54,11 +54,6 @@ void fill_vigener_table(char vigenereTable[52][52]) {
   {
     alphabet[i] = i + 97 - 26;
   }
-  for (int i = 0; i < 52; ++i)
-  {
-    printf("%c", alphabet[i]);
-    printf("\n");
-  }
 
   int shift = 0;
 
@@ -66,25 +61,11 @@ void fill_vigener_table(char vigenereTable[52][52]) {
   {
     for (int k = 0; k < 52; ++k)
     {
-      char result = alphabet[k] + shift;
-      if (result <= 90)
-      {
-        vigenereTable[i][k] = result;
-      } else if (result > 90 && result < 97)
-      {
-        vigenereTable[i][k] = result + 6;
-      } else if (result > 122)
-      {
-        vigenereTable[i][k] = result - 52 - 6;
-      }
-
-      // vigenereTable[i][k] = result <= 90 //если вышли за пределы нашего диапазона - начинаем с начала диапазона
-      //           ? result
-      //           : result - 26;
-      unsigned char c = vigenereTable[i][k];
-      printf("%u ", c);
+      int index = k + shift < 52 
+                    ? k + shift
+                    : k  + shift - 52;
+      vigenereTable[i][k] = alphabet[index] ;
     }
-    printf("\n");
     shift++;
   }
 }
@@ -98,12 +79,16 @@ void code_text(const char* source, const char* key, FILE *destination) {
   {
     if (isalpha(source[i])) //если буква, кодируем ее и отправляем в destination файл
     {
-      char symbol = toupper(source[i]); 
+      int symbolIndex = source[i] <= 90
+              ? source[i] - 65 //индексы в таблице Виженера
+              : source[i] - 65 - 6;
 
-      int symbolIndex = symbol - 65; //индексы в таблице Виженера
-      int keyIndex = key[keyPosition] - 65;
+      int keyIndex = key[keyPosition] <= 90
+                ? key[keyPosition] - 65 //индексы в таблице Виженера
+                : key[keyPosition] - 65 - 6;
 
       char encoded = vigenereTable[symbolIndex][keyIndex];
+
       fputc(encoded, destination);
     
       keyPosition = keyPosition < keyLenght -1 //если мы дошли до конца ключа, вернуться к началу
@@ -125,11 +110,12 @@ void decode_text(const char* source, const char* key, FILE *destination) {
   {
     if (isalpha(source[i]))
     {
-      char symbol = toupper(source[i]); 
-      int keyIndex = key[keyPosition] - 65;
+      int keyIndex = key[keyPosition] <= 90
+                ? key[keyPosition] - 65 //индексы в таблице Виженера
+                : key[keyPosition] - 65 - 6;
 
       int columnNumber = 0; //пройдемся по всем столбцам строки, на которой буква из ключа
-      while(vigenereTable[keyIndex][columnNumber] != symbol){
+      while(vigenereTable[keyIndex][columnNumber] != source[i]){
           columnNumber++;
       }
       char decoded = vigenereTable[0][columnNumber]; //когда найдем совпадение, запишем значение из 0 строки, т.к. там не было сдвига
@@ -175,6 +161,8 @@ int main (int argc, char *argv[])
         }
         key =  optarg; 
         keySet = 1; //если ключ есть и он валидный, true
+        keyLenght = strlen(optarg);  
+
         break;
 
       case 'c':
@@ -246,12 +234,6 @@ int main (int argc, char *argv[])
   fclose(source);
 
   fill_vigener_table(vigenereTable);  
-  keyLenght = strlen(key);  
-
-  for (int i = 0; i < keyLenght; ++i)
-  {
-    key[i] = toupper(key[i]); //все к аппер - ведь в таблице все заглавные
-  }
 
   if (code){
     code_text(textToEncrypt, key, destination);
@@ -260,8 +242,6 @@ int main (int argc, char *argv[])
     decode_text(textToEncrypt, key, destination);
   }
   
-  fputc('\n', destination); //чтобы красиво
-
   free(textToEncrypt); //освободим память
   fclose(destination);
     
